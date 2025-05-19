@@ -1,0 +1,76 @@
+<?php
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .admin-header {
+            background: #4a2c5e;
+            color: #fff;
+            padding: 10px 0;
+        }
+        .admin-header .navbar {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-header .logo a {
+            color: #fff;
+            font-size: 1.5em;
+            text-decoration: none;
+        }
+        .admin-header .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            margin: 0;
+            padding: 0;
+        }
+        .admin-header .nav-links li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1em;
+        }
+        .admin-header .nav-links li a:hover {
+            color: #f1c40f;
+        }
+        .admin-header .nav-links li .btn {
+            background: #e74c3c;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .admin-header .nav-links li .btn:hover {
+            background: #c0392b;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <nav class="navbar">
+            <div class="logo">
+                <a href="dashboard.php?section=dashboard">BOOK WIT US</a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="dashboard.php?section=dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="dashboard.php?section=users"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="dashboard.php?section=vendors"><i class="fas fa-store"></i> Vendors</a></li>
+                <li><a href="dashboard.php?section=messages"><i class="fas fa-envelope"></i> Messages</a></li>
+                <li>
+                    <form method="POST" action="../logout.php" style="display:inline;">
+                        <button type="submit" class="btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+    </header>
+</body>
+</html>
