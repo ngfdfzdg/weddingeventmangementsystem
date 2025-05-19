@@ -1,0 +1,1084 @@
+<?php
+session_start();
+include '../includes/db_connect.php';
+
+// Authentication check (already in admin_header.php, but kept for standalone access)
+if (!isset($_SESSION['admin_id']) || $_SESSION['user_type'] !== 'admin') {
+    header("Location: ../login.php");
+    exit;
+}
+
+// Handle AJAX requests
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+    header('Content-Type: application/json');
+    $response = ['success' => false, 'message' => ''];
+
+    error_log("AJAX request received: " . print_r($_POST, true));
+
+    if (isset($_POST['action'])) {
+        if ($_POST['action'] == 'delete_user') {
+            $user_id = (int)$_POST['user_id'];
+            error_log("Attempting to delete user ID: $user_id");
+
+            // Delete related records
+            $tables = ['bookings', 'cart', 'feedback'];
+            foreach ($tables as $table) {
+                $stmt = $conn->prepare("DELETE FROM $table WHERE user_id = ?");
+                if ($stmt === false) {
+                    error_log("Prepare failed for $table deletion: " . $conn->error);
+                    $response['message'] = "Database error preparing $table deletion.";
+                    echo json_encode($response);
+                    exit;
+                }
+                $stmt->bind_param("i", $user_id);
+                if (!$stmt->execute()) {
+                    error_log("Execute failed for $table deletion: " . $stmt->error);
+                    $response['message'] = "Failed to delete related $table records.";
+                    $stmt->close();
+                    echo json_encode($response);
+                    exit;
+                }
+                $stmt->close();
+            }
+
+            // Delete user
+            $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+            if ($stmt === false) {
+                error_log("Delete user prepare failed: " . $conn->error);
+                $response['message'] = "Database error preparing user deletion.";
+            } else {
+                $stmt->bind_param("i", $user_id);
+                if ($stmt->execute()) {
+                    error_log("User ID $user_id deleted successfully");
+                    $response['success'] = true;
+                    $response['message'] = "User deleted successfully";
+                } else {
+                    error_log("Delete user execute failed: " . $stmt->error);
+                    $response['message'] = "Failed to delete user: " . $stmt->error;
+                }
+                $stmt->close();
+            }
+        } elseif ($_POST['action'] == 'delete_vendor') {
+            $vendor_id = (int)$_POST['vendor_id'];
+            error_log("Attempting to delete vendor ID: $vendor_id");
+
+            // Delete related records
+            $tables = ['bookings', 'availability', 'cart', 'feedback'];
+            foreach ($tables as $table) {
+                $stmt = $conn->prepare("DELETE FROM $table WHERE vendor_id = ?");
+                if ($stmt === false) {
+                    error_log("Prepare failed for $table deletion: " . $conn->error);
+                    $response['message'] = "Database error preparing $table deletion.";
+                    echo json_encode($response);
+                    exit;
+                }
+                $stmt->bind_param("i", $vendor_id);
+                if (!$stmt->execute()) {
+                    error_log("Execute failed for $table deletion: " . $stmt->error);
+                    $response['message'] = "Failed to delete related $table records.";
+                    $stmt->close();
+                    echo json_encode($response);
+                    exit;
+                }
+                $stmt->close();
+            }
+
+            // Delete vendor
+            $stmt = $conn->prepare("DELETE FROM vendors WHERE id = ?");
+            if ($stmt === false) {
+                error_log("Delete vendor prepare failed: " . $conn->error);
+                $response['message'] = "Database error preparing vendor deletion.";
+            } else {
+                $stmt->bind_param("i", $vendor_id);
+                if ($stmt->execute()) {
+                    error_log("Vendor ID $vendor_id deleted successfully");
+                    $response['success'] = true;
+                    $response['message'] = "Vendor deleted successfully";
+                } else {
+                    error_log("Delete vendor execute failed: " . $stmt->error);
+                    $response['message'] = "Failed to delete vendor: " . $stmt->error;
+                }
+                $stmt->close();
+            }
+        }
+    } elseif (isset($_POST['edit_user'])) {
+        $user_id = (int)$_POST['user_id'];
+        $full_name = trim($_POST['full_name']);
+        $email = trim($_POST['email']);
+        $phone = trim($_POST['phone']);
+        error_log("Updating user ID: $user_id");
+        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
+        if ($stmt === false) {
+            error_log("Update user prepare failed: " . $conn->error);
+            $response['message'] = "Database error preparing user update.";
+        } else {
+            $stmt->bind_param("sssi", $full_name, $email, $phone, $user_id);
+            if ($stmt->execute()) {
+                error_log("User ID $user_id updated successfully");
+                $response['success'] = true;
+                $response['message'] = "User updated successfully";
+                $response['data'] = [
+                    'id' => $user_id,
+                    'full_name' => htmlspecialchars($full_name),
+                    'email' => htmlspecialchars($email),
+                    'phone' => htmlspecialchars($phone),
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+            } else {
+                error_log("Update user execute failed: " . $stmt->error);
+                $response['message'] = "Failed to update user: " . $stmt->error;
+            }
+            $stmt->close();
+        }
+    } elseif (isset($_POST['edit_vendor'])) {
+        $vendor_id = (int)$_POST['vendor_id'];
+        $business_name = trim($_POST['business_name']);
+        $full_name = trim($_POST['full_name']);
+        $email = trim($_POST['email']);
+        $phone = trim($_POST['phone']);
+        $location = trim($_POST['location']);
+        $category = trim($_POST['category']);
+        $price_per_day = !empty($_POST['price_per_day']) ? (float)$_POST['price_per_day'] : null;
+        $capacity = !empty($_POST['capacity']) ? (int)$_POST['capacity'] : null;
+        error_log("Updating vendor ID: $vendor_id");
+        $stmt = $conn->prepare("UPDATE vendors SET business_name = ?, full_name = ?, email = ?, phone = ?, location = ?, category = ?, price_per_day = ?, capacity = ? WHERE id = ?");
+        if ($stmt === false) {
+            error_log("Update vendor prepare failed: " . $conn->error);
+            $response['message'] = "Database error preparing vendor update.";
+        } else {
+            $stmt->bind_param("ssssssidi", $business_name, $full_name, $email, $phone, $location, $category, $price_per_day, $capacity, $vendor_id);
+            if ($stmt->execute()) {
+                error_log("Vendor ID $vendor_id updated successfully");
+                $response['success'] = true;
+                $response['message'] = "Vendor updated successfully";
+                $response['data'] = [
+                    'id' => $vendor_id,
+                    'business_name' => htmlspecialchars($business_name),
+                    'full_name' => htmlspecialchars($full_name),
+                    'email' => htmlspecialchars($email),
+                    'phone' => htmlspecialchars($phone),
+                    'location' => htmlspecialchars($location),
+                    'category' => htmlspecialchars($category),
+                    'price_per_day' => htmlspecialchars($price_per_day ?? 'N/A'),
+                    'capacity' => htmlspecialchars($capacity ?? 'N/A')
+                ];
+            } else {
+                error_log("Update vendor execute failed: " . $stmt->error);
+                $response['message'] = "Failed to update vendor: " . $stmt->error;
+            }
+            $stmt->close();
+        }
+    }
+
+    echo json_encode($response);
+    exit;
+}
+
+// Handle non-AJAX requests (fallback)
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+    if (isset($_POST['action'])) {
+        if ($_POST['action'] == 'delete_user') {
+            $user_id = (int)$_POST['user_id'];
+            error_log("Non-AJAX: Attempting to delete user ID: $user_id");
+
+            $tables = ['bookings', 'cart', 'feedback'];
+            foreach ($tables as $table) {
+                $stmt = $conn->prepare("DELETE FROM $table WHERE user_id = ?");
+                if ($stmt === false) {
+                    error_log("Non-AJAX: Prepare failed for $table deletion: " . $conn->error);
+                    $error = "Database error preparing $table deletion.";
+                    break;
+                }
+                $stmt->bind_param("i", $user_id);
+                if (!$stmt->execute()) {
+                    error_log("Non-AJAX: Execute failed for $table deletion: " . $stmt->error);
+                    $error = "Failed to delete related $table records.";
+                    $stmt->close();
+                    break;
+                }
+                $stmt->close();
+            }
+
+            if (!isset($error)) {
+                $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+                if ($stmt === false) {
+                    error_log("Non-AJAX: Delete user prepare failed: " . $conn->error);
+                    $error = "Database error preparing user deletion.";
+                } else {
+                    $stmt->bind_param("i", $user_id);
+                    if ($stmt->execute()) {
+                        error_log("Non-AJAX: User ID $user_id deleted successfully");
+                        $success = "User deleted successfully";
+                    } else {
+                        error_log("Non-AJAX: Delete user execute failed: " . $stmt->error);
+                        $error = "Failed to delete user: " . $stmt->error;
+                    }
+                    $stmt->close();
+                }
+            }
+        } elseif ($_POST['action'] == 'delete_vendor') {
+            $vendor_id = (int)$_POST['vendor_id'];
+            error_log("Non-AJAX: Attempting to delete vendor ID: $vendor_id");
+
+            $tables = ['bookings', 'availability', 'cart', 'feedback'];
+            foreach ($tables as $table) {
+                $stmt = $conn->prepare("DELETE FROM $table WHERE vendor_id = ?");
+                if ($stmt === false) {
+                    error_log("Non-AJAX: Prepare failed for $table deletion: " . $conn->error);
+                    $error = "Database error preparing $table deletion.";
+                    break;
+                }
+                $stmt->bind_param("i", $vendor_id);
+                if (!$stmt->execute()) {
+                    error_log("Non-AJAX: Execute failed for $table deletion: " . $stmt->error);
+                    $error = "Failed to delete related $table records.";
+                    $stmt->close();
+                    break;
+                }
+                $stmt->close();
+            }
+
+            if (!isset($error)) {
+                $stmt = $conn->prepare("DELETE FROM vendors WHERE id = ?");
+                if ($stmt === false) {
+                    error_log("Non-AJAX: Delete vendor prepare failed: " . $conn->error);
+                    $error = "Database error preparing vendor deletion.";
+                } else {
+                    $stmt->bind_param("i", $vendor_id);
+                    if ($stmt->execute()) {
+                        error_log("Non-AJAX: Vendor ID $vendor_id deleted successfully");
+                        $success = "Vendor deleted successfully";
+                    } else {
+                        error_log("Non-AJAX: Delete vendor execute failed: " . $stmt->error);
+                        $error = "Failed to delete vendor: " . $stmt->error;
+                    }
+                    $stmt->close();
+                }
+            }
+        }
+    } elseif (isset($_POST['edit_user'])) {
+        $user_id = (int)$_POST['user_id'];
+        $full_name = trim($_POST['full_name']);
+        $email = trim($_POST['email']);
+        $phone = trim($_POST['phone']);
+        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
+        if ($stmt === false) {
+            error_log("Non-AJAX: Update user prepare failed: " . $conn->error);
+            $error = "Database error preparing user update.";
+        } else {
+            $stmt->bind_param("sssi", $full_name, $email, $phone, $user_id);
+            if ($stmt->execute()) {
+                $success = "User updated successfully";
+            } else {
+                error_log("Non-AJAX: Update user execute failed: " . $stmt->error);
+                $error = "Failed to update user: " . $stmt->error;
+            }
+            $stmt->close();
+        }
+    } elseif (isset($_POST['edit_vendor'])) {
+        $vendor_id = (int)$_POST['vendor_id'];
+        $business_name = trim($_POST['business_name']);
+        $full_name = trim($_POST['full_name']);
+        $email = trim($_POST['email']);
+        $phone = trim($_POST['phone']);
+        $location = trim($_POST['location']);
+        $category = trim($_POST['category']);
+        $price_per_day = !empty($_POST['price_per_day']) ? (float)$_POST['price_per_day'] : null;
+        $capacity = !empty($_POST['capacity']) ? (int)$_POST['capacity'] : null;
+        $stmt = $conn->prepare("UPDATE vendors SET business_name = ?, full_name = ?, email = ?, phone = ?, location = ?, category = ?, price_per_day = ?, capacity = ? WHERE id = ?");
+        if ($stmt === false) {
+            error_log("Non-AJAX: Update vendor prepare failed: " . $conn->error);
+            $error = "Database error preparing vendor update.";
+        } else {
+            $stmt->bind_param("ssssssidi", $business_name, $full_name, $email, $phone, $location, $category, $price_per_day, $capacity, $vendor_id);
+            if ($stmt->execute()) {
+                $success = "Vendor updated successfully";
+            } else {
+                error_log("Non-AJAX: Update vendor execute failed: " . $stmt->error);
+                $error = "Failed to update vendor: " . $stmt->error;
+            }
+            $stmt->close();
+        }
+    }
+}
+
+// Fetch dashboard stats
+$total_users_result = $conn->query("SELECT COUNT(*) as count FROM users");
+if ($total_users_result) {
+    $total_users = $total_users_result->fetch_assoc()['count'];
+} else {
+    error_log("Total users query failed: " . $conn->error);
+    $total_users = 0;
+}
+
+$total_vendors_result = $conn->query("SELECT COUNT(*) as count FROM vendors");
+if ($total_vendors_result) {
+    $total_vendors = $total_vendors_result->fetch_assoc()['count'];
+} else {
+    error_log("Total vendors query failed: " . $conn->error);
+    $total_vendors = 0;
+}
+
+// Fetch vendor categories
+$categories = [
+    'function_hall', 'catering', 'photography', 'decoration', 'music',
+    'makeup', 'clothing', 'jewelry', 'transport', 'invitation'
+];
+$vendor_counts = [];
+foreach ($categories as $category) {
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM vendors WHERE category = ?");
+    if ($stmt === false) {
+        error_log("Vendor count prepare failed for category $category: " . $conn->error);
+        $vendor_counts[$category] = 0;
+        continue;
+    }
+    $stmt->bind_param("s", $category);
+    if ($stmt->execute()) {
+        $vendor_counts[$category] = $stmt->get_result()->fetch_assoc()['count'];
+    } else {
+        error_log("Vendor count execute failed for category $category: " . $stmt->error);
+        $vendor_counts[$category] = 0;
+    }
+    $stmt->close();
+}
+
+// Handle section and filtering
+$section = $_GET['section'] ?? 'dashboard';
+$vendor_category = $_GET['vendor_category'] ?? '';
+$message_type = $_GET['message_type'] ?? 'user';
+$message_category = $_GET['message_category'] ?? '';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Wedding Management</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #4a2c5e;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #4a2c5e, #6b3e8e);
+            color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .stat-card h3 {
+            margin: 0;
+            font-size: 1.4em;
+            font-weight: 500;
+        }
+        .stat-card p {
+            margin: 10px 0 0;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .section {
+            display: none;
+            width: 100%;
+            margin-top: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+        .section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .table th {
+            background: #4a2c5e;
+            color: #fff;
+            font-weight: 500;
+        }
+        .table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .table tr:hover {
+            background: #f1c40f;
+            color: #000;
+            transition: background 0.2s;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .btn-edit {
+            background: #f1c40f;
+            color: #000;
+        }
+        .btn-edit:hover {
+            background: #d4ac0d;
+            transform: scale(1.05);
+        }
+        .btn-delete {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .btn-delete:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+        .form-container {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a2c5e;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #4a2c5e;
+            outline: none;
+        }
+        .form-group .btn {
+            margin: 0 5px;
+        }
+        .notification {
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            display: none;
+        }
+        .notification.success {
+            background: #2ecc71;
+            color: #fff;
+        }
+        .notification.error {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .category-item {
+            background: #ecf0f1;
+            padding: 10px 20px;
+            border-radius: 20px;
+            transition: background 0.3s;
+        }
+        .category-item a {
+            text-decoration: none;
+            color: #4a2c5e;
+            font-size: 0.9em;
+        }
+        .category-item:hover {
+            background: #4a2c5e;
+        }
+        .category-item:hover a {
+            color: #fff;
+        }
+        .message-filters {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .message-filters select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <?php include '../includes/admin_header.php'; ?>
+    <div class="dashboard-container">
+        <h1>Admin Dashboard</h1>
+        <div id="notification" class="notification"></div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section <?php echo $section == 'dashboard' ? 'active' : ''; ?>">
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <p><?php echo $total_users; ?></p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Vendors</h3>
+                    <p><?php echo $total_vendors; ?></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="users" class="section <?php echo $section == 'users' ? 'active' : ''; ?>">
+            <h2>Users</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table">
+                    <?php
+                    $result = $conn->query("SELECT id, full_name, email, phone, created_at FROM users ORDER BY id");
+                    if ($result) {
+                        if ($result->num_rows == 0) {
+                            echo "<tr><td colspan='6'>No users found in the database.</td></tr>";
+                        } else {
+                            while ($row = $result->fetch_assoc()):
+                    ?>
+                    <tr data-id="<?php echo $row['id']; ?>">
+                        <td><?php echo $row['id']; ?></td>
+                        <td><?php echo htmlspecialchars($row['full_name']); ?></td>
+                        <td><?php echo htmlspecialchars($row['email']); ?></td>
+                        <td><?php echo htmlspecialchars($row['phone'] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($row['created_at']); ?></td>
+                        <td>
+                            <button class="btn btn-edit" onclick="showEditUserForm(<?php echo $row['id']; ?>, '<?php echo addslashes($row['full_name']); ?>', '<?php echo addslashes($row['email']); ?>', '<?php echo addslashes($row['phone'] ?? ''); ?>')">Edit</button>
+                            <button class="btn btn-delete" onclick="deleteUser(<?php echo $row['id']; ?>)">Delete</button>
+                        </td>
+                    </tr>
+                    <?php
+                            endwhile;
+                        }
+                    } else {
+                        error_log("User query failed: " . $conn->error);
+                        echo "<tr><td colspan='6'>Error loading users: " . htmlspecialchars($conn->error) . "</td></tr>";
+                    }
+                    ?>
+                </tbody>
+            </table>
+            <div id="edit-user-form" class="form-container" style="display:none;">
+                <h3>Edit User</h3>
+                <form id="user-edit-form" method="POST">
+                    <input type="hidden" name="user_id" id="edit-user-id">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" id="edit-user-full-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" id="edit-user-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="phone" id="edit-user-phone">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" name="edit_user" class="btn btn-edit">Save</button>
+                        <button type="button" onclick="hideEditUserForm()" class="btn btn-delete">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Vendors Section -->
+        <div id="vendors" class="section <?php echo $section == 'vendors' ? 'active' : ''; ?>">
+            <h2>Vendor Categories</h2>
+            <div class="category-list">
+                <?php foreach ($vendor_counts as $category => $count): ?>
+                    <div class="category-item">
+                        <a href="?section=vendors&vendor_category=<?php echo urlencode($category); ?>">
+                            <?php echo ucwords(str_replace('_', ' ', $category)); ?>: <?php echo $count; ?>
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <?php if ($vendor_category): ?>
+                <h3>Vendors in <?php echo ucwords(str_replace('_', ' ', $vendor_category)); ?></h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Business Name</th>
+                            <th>Contact Person</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Location</th>
+                            <th>Category</th>
+                            <th>Price/Day</th>
+                            <th>Capacity</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vendors-table">
+                        <?php
+                        $stmt = $conn->prepare("SELECT id, business_name, full_name, email, phone, location, category, price_per_day, capacity FROM vendors WHERE category = ? ORDER BY id");
+                        if ($stmt === false) {
+                            error_log("Vendor query prepare failed: " . $conn->error);
+                            echo "<tr><td colspan='10'>Error loading vendors: " . htmlspecialchars($conn->error) . "</td></tr>";
+                        } else {
+                            $stmt->bind_param("s", $vendor_category);
+                            if ($stmt->execute()) {
+                                $result = $stmt->get_result();
+                                if ($result->num_rows == 0) {
+                                    echo "<tr><td colspan='10'>No vendors found for category: " . htmlspecialchars($vendor_category) . "</td></tr>";
+                                } else {
+                                    while ($row = $result->fetch_assoc()):
+                        ?>
+                        <tr data-id="<?php echo $row['id']; ?>">
+                            <td><?php echo $row['id']; ?></td>
+                            <td><?php echo htmlspecialchars($row['business_name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['full_name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['email']); ?></td>
+                            <td><?php echo htmlspecialchars($row['phone'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($row['location'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($row['category']); ?></td>
+                            <td><?php echo htmlspecialchars($row['price_per_day'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($row['capacity'] ?? 'N/A'); ?></td>
+                            <td>
+                                <button class="btn btn-edit" onclick="showEditVendorForm(<?php echo $row['id']; ?>, '<?php echo addslashes($row['business_name']); ?>', '<?php echo addslashes($row['full_name']); ?>', '<?php echo addslashes($row['email']); ?>', '<?php echo addslashes($row['phone'] ?? ''); ?>', '<?php echo addslashes($row['location'] ?? ''); ?>', '<?php echo $row['category']; ?>', <?php echo $row['price_per_day'] ?? 'null'; ?>, <?php echo $row['capacity'] ?? 'null'; ?>)">Edit</button>
+                                <button class="btn btn-delete" onclick="deleteVendor(<?php echo $row['id']; ?>)">Delete</button>
+                            </td>
+                        </tr>
+                        <?php
+                                    endwhile;
+                                }
+                            } else {
+                                error_log("Vendor query execute failed: " . $stmt->error);
+                                echo "<tr><td colspan='10'>Error loading vendors: " . htmlspecialchars($stmt->error) . "</td></tr>";
+                            }
+                            $stmt->close();
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+            <div id="edit-vendor-form" class="form-container" style="display:none;">
+                <h3>Edit Vendor</h3>
+                <form id="vendor-edit-form" method="POST">
+                    <input type="hidden" name="vendor_id" id="edit-vendor-id">
+                    <div class="form-group">
+                        <label>Business Name</label>
+                        <input type="text" name="business_name" id="edit-vendor-business-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Person</label>
+                        <input type="text" name="full_name" id="edit-vendor-full-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" id="edit-vendor-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="phone" id="edit-vendor-phone">
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" name="location" id="edit-vendor-location">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category" id="edit-vendor-category" required>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo $cat; ?>"><?php echo ucwords(str_replace('_', ' ', $cat)); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price Per Day</label>
+                        <input type="number" step="0.01" min="0" name="price_per_day" id="edit-vendor-price-per-day">
+                    </div>
+                    <div class="form-group">
+                        <label>Capacity</label>
+                        <input type="number" min="0" name="capacity" id="edit-vendor-capacity">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" name="edit_vendor" class="btn btn-edit">Save</button>
+                        <button type="button" onclick="hideEditVendorForm()" class="btn btn-delete">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Messages Section -->
+        <div id="messages" class="section <?php echo $section == 'messages' ? 'active' : ''; ?>">
+            <h2>Messages</h2>
+            <div class="message-filters">
+                <form method="GET">
+                    <input type="hidden" name="section" value="messages">
+                    <select name="message_type" onchange="this.form.submit()">
+                        <option value="user" <?php echo $message_type == 'user' ? 'selected' : ''; ?>>User Messages</option>
+                        <option value="vendor" <?php echo $message_type == 'vendor' ? 'selected' : ''; ?>>Vendor Messages</option>
+                    </select>
+                    <?php if ($message_type == 'vendor'): ?>
+                        <select name="message_category" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo $cat; ?>" <?php echo $message_category == $cat ? 'selected' : ''; ?>>
+                                    <?php echo ucwords(str_replace('_', ' ', $cat)); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
+                </form>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Sender</th>
+                        <th>Message</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    if ($message_type == 'user') {
+                        $result = $conn->query("SELECT full_name, email, message, created_at FROM contact_messages ORDER BY created_at DESC");
+                        if ($result) {
+                            if ($result->num_rows == 0) {
+                                echo "<tr><td colspan='3'>No user messages found.</td></tr>";
+                            } else {
+                                while ($row = $result->fetch_assoc()):
+                    ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['full_name']) . " (" . htmlspecialchars($row['email']) . ")"; ?></td>
+                            <td><?php echo htmlspecialchars($row['message']); ?></td>
+                            <td><?php echo htmlspecialchars($row['created_at']); ?></td>
+                        </tr>
+                    <?php
+                                endwhile;
+                            }
+                        } else {
+                            error_log("Contact messages query failed: " . $conn->error);
+                            echo "<tr><td colspan='3'>Error loading messages: " . htmlspecialchars($conn->error) . "</td></tr>";
+                        }
+                    } else {
+                        $query = "SELECT m.message, m.created_at, v.business_name 
+                                  FROM messages m 
+                                  JOIN vendors v ON m.sender_id = v.id AND m.sender_type = 'vendor' 
+                                  WHERE 1=1";
+                        $params = [];
+                        $types = '';
+                        if (!empty($message_category)) {
+                            $query .= " AND v.category = ?";
+                            $params[] = $message_category;
+                            $types .= 's';
+                        }
+                        $query .= " ORDER BY m.created_at DESC";
+                        $stmt = $conn->prepare($query);
+                        if ($stmt === false) {
+                            error_log("Vendor messages query prepare failed: " . $conn->error);
+                            echo "<tr><td colspan='3'>Error loading messages: " . htmlspecialchars($conn->error) . "</td></tr>";
+                        } else {
+                            if (!empty($params)) {
+                                $stmt->bind_param($types, ...$params);
+                            }
+                            if ($stmt->execute()) {
+                                $result = $stmt->get_result();
+                                if ($result->num_rows == 0) {
+                                    echo "<tr><td colspan='3'>No vendor messages found" . (!empty($message_category) ? " for category: " . htmlspecialchars($message_category) : "") . ".</td></tr>";
+                                } else {
+                                    while ($row = $result->fetch_assoc()):
+                    ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['business_name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['message']); ?></td>
+                            <td><?php echo htmlspecialchars($row['created_at']); ?></td>
+                        </tr>
+                    <?php
+                                    endwhile;
+                                }
+                            } else {
+                                error_log("Vendor messages query execute failed: " . $stmt->error);
+                                echo "<tr><td colspan='3'>Error loading messages: " . htmlspecialchars($stmt->error) . "</td></tr>";
+                            }
+                            $stmt->close();
+                        }
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php include '../includes/footer.php'; ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Notification handling
+            function showNotification(message, type) {
+                console.log(`Notification: ${message} (${type})`);
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.style.display = 'block';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 5000);
+            }
+
+            // Edit user form
+            window.showEditUserForm = function(id, fullName, email, phone) {
+                document.getElementById('edit-user-id').value = id;
+                document.getElementById('edit-user-full-name').value = fullName;
+                document.getElementById('edit-user-email').value = email;
+                document.getElementById('edit-user-phone').value = phone || '';
+                document.getElementById('edit-user-form').style.display = 'block';
+            };
+            window.hideEditUserForm = function() {
+                document.getElementById('edit-user-form').style.display = 'none';
+            };
+
+            // Edit vendor form
+            window.showEditVendorForm = function(id, businessName, fullName, email, phone, location, category, pricePerDay, capacity) {
+                document.getElementById('edit-vendor-id').value = id;
+                document.getElementById('edit-vendor-business-name').value = businessName;
+                document.getElementById('edit-vendor-full-name').value = fullName;
+                document.getElementById('edit-vendor-email').value = email;
+                document.getElementById('edit-vendor-phone').value = phone || '';
+                document.getElementById('edit-vendor-location').value = location || '';
+                document.getElementById('edit-vendor-category').value = category;
+                document.getElementById('edit-vendor-price-per-day').value = pricePerDay || '';
+                document.getElementById('edit-vendor-capacity').value = capacity || '';
+                document.getElementById('edit-vendor-form').style.display = 'block';
+            };
+            window.hideEditVendorForm = function() {
+                document.getElementById('edit-vendor-form').style.display = 'none';
+            };
+
+            // AJAX for user edit
+            document.getElementById('user-edit-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                formData.append('edit_user', '1');
+                console.log('Submitting user edit form', Object.fromEntries(formData));
+
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('User edit response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('User edit response:', data);
+                    showNotification(data.message, data.success ? 'success' : 'error');
+                    if (data.success) {
+                        const row = document.querySelector(`#users-table tr[data-id="${data.data.id}"]`);
+                        if (row) {
+                            const cells = row.getElementsByTagName('td');
+                            cells[1].textContent = data.data.full_name;
+                            cells[2].textContent = data.data.email;
+                            cells[3].textContent = data.data.phone || '';
+                            cells[4].textContent = data.data.created_at;
+                        }
+                        hideEditUserForm();
+                    }
+                })
+                .catch(error => {
+                    console.error('User edit error:', error);
+                    showNotification('An error occurred. Please try again.', 'error');
+                });
+            });
+
+            // AJAX for vendor edit
+            document.getElementById('vendor-edit-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                formData.append('edit_vendor', '1');
+                console.log('Submitting vendor edit form', Object.fromEntries(formData));
+
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('Vendor edit response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Vendor edit response:', data);
+                    showNotification(data.message, data.success ? 'success' : 'error');
+                    if (data.success) {
+                        const row = document.querySelector(`#vendors-table tr[data-id="${data.data.id}"]`);
+                        if (row) {
+                            const cells = row.getElementsByTagName('td');
+                            cells[1].textContent = data.data.business_name;
+                            cells[2].textContent = data.data.full_name;
+                            cells[3].textContent = data.data.email;
+                            cells[4].textContent = data.data.phone || '';
+                            cells[5].textContent = data.data.location || '';
+                            cells[6].textContent = data.data.category;
+                            cells[7].textContent = data.data.price_per_day;
+                            cells[8].textContent = data.data.capacity;
+                        }
+                        hideEditVendorForm();
+                    }
+                })
+                .catch(error => {
+                    console.error('Vendor edit error:', error);
+                    showNotification('An error occurred. Please try again.', 'error');
+                });
+            });
+
+            // AJAX for user delete
+            window.deleteUser = function(id) {
+                if (!confirm('Are you sure you want to delete this user?')) return;
+
+                const formData = new FormData();
+                formData.append('action', 'delete_user');
+                formData.append('user_id', id);
+                console.log('Deleting user ID:', id);
+
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('User delete response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('User delete response:', data);
+                    showNotification(data.message, data.success ? 'success' : 'error');
+                    if (data.success) {
+                        const row = document.querySelector(`#users-table tr[data-id="${id}"]`);
+                        if (row) {
+                            row.remove();
+                            console.log(`Removed user row ID: ${id}`);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('User delete error:', error);
+                    showNotification('An error occurred. Please try again.', 'error');
+                });
+            };
+
+            // AJAX for vendor delete
+            window.deleteVendor = function(id) {
+                if (!confirm('Are you sure you want to delete this vendor?')) return;
+
+                const formData = new FormData();
+                formData.append('action', 'delete_vendor');
+                formData.append('vendor_id', id);
+                console.log('Deleting vendor ID:', id);
+
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('Vendor delete response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Vendor delete response:', data);
+                    showNotification(data.message, data.success ? 'success' : 'error');
+                    if (data.success) {
+                        const row = document.querySelector(`#vendors-table tr[data-id="${id}"]`);
+                        if (row) {
+                            row.remove();
+                            console.log(`Removed vendor row ID: ${id}`);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Vendor delete error:', error);
+                    showNotification('An error occurred. Please try again.', 'error');
+                });
+            };
+
+            // Show non-AJAX success/error notifications
+            <?php if (isset($success)): ?>
+                showNotification('<?php echo addslashes($success); ?>', 'success');
+            <?php elseif (isset($error)): ?>
+                showNotification('<?php echo addslashes($error); ?>', 'error');
+            <?php endif; ?>
+        });
+    </script>
+</body>
+</html>
+<?php $conn->close(); ?>
