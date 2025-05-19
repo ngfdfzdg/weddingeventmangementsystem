@@ -1,0 +1,1398 @@
+/* Reset default browser styles for consistent rendering */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Base styles for the body, setting font, background, and text color */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f9f9f9;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Header styles for navigation bar */
+header {
+    background: #4a2c5e;
+    color: #fff;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo styling for the brand name */
+.logo {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Navigation menu styles */
+nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+}
+
+/* Navigation list items */
+nav ul li {
+    margin-left: 25px;
+    position: relative;
+}
+
+/* Navigation links */
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+/* Hover effect for navigation links */
+nav ul li a:hover {
+    color: #6b3e8a;
+}
+
+/* Icon spacing in navigation links */
+nav ul li a i {
+    margin-right: 8px;
+}
+
+/* Dropdown menu for navigation */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    background: #3a224b;
+    top: 100%;
+    left: 0;
+    min-width: 180px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+}
+
+/* Show dropdown menu on hover */
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+/* Dropdown menu list items */
+.dropdown-menu li {
+    margin: 0;
+    padding: 10px;
+}
+
+/* Dropdown menu links */
+.dropdown-menu li a {
+    color: #fff;
+    font-size: 14px;
+    display: block;
+}
+
+/* Profile menu specific styling */
+.profile-menu {
+    background: #fff;
+    border-radius: 5px;
+}
+
+.profile-menu li a {
+    color: #333;
+    padding: 8px 12px;
+}
+
+.profile-menu li a:hover {
+    background: #6b3e8a;
+    color: #fff;
+}
+
+/* Hero slider for index.php */
+.hero-slider {
+    position: relative;
+    height: 75vh;
+    overflow: hidden;
+}
+
+/* Individual slider items with background images */
+.slider-item {
+    background-size: cover;
+    background-position: center;
+    height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+}
+
+/* Dark overlay for slider items */
+.slider-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+/* Slider content */
+.slider-content {
+    position: relative;
+    color: #fff;
+    max-width: 800px;
+    padding: 20px;
+    text-align: center;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Slider heading */
+.slider-content h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* Slider description */
+.slider-content p {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+/* Search bar styling */
+.search-bar {
+    display: flex;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 600px;
+    margin: 0 auto;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Search bar inputs and button */
+.search-bar select,
+.search-bar input,
+.search-bar button {
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    flex: 1;
+}
+
+/* Search bar button */
+.search-bar button {
+    background: #4a2c5e;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.search-bar button:hover {
+    background: #3a224b;
+}
+
+/* Slick carousel navigation arrows */
+.slick-prev, .slick-next {
+    background: #4a2c5e;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    z-index: 2;
+}
+
+.slick-prev:hover, .slick-next:hover {
+    background: #3a224b;
+}
+
+/* Slick dots */
+.slick-dots {
+    bottom: 20px;
+    z-index: 2;
+}
+
+.slick-dots li button:before {
+    color: #fff;
+    opacity: 0.75;
+}
+
+.slick-dots li.slick-active button:before {
+    color: #6b3e8a;
+}
+
+/* Slider call-to-action button */
+.slider-btn {
+    display: inline-block;
+    background: #6b3e8a;
+    color: #fff;
+    padding: 12px 25px;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.slider-btn:hover {
+    background: #5a3373;
+}
+
+/* Search section for index.php */
+.search-section {
+    padding: 20px;
+    background: #fff;
+    text-align: center;
+}
+
+/* Home slider */
+.home-slider {
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+/* Home slider images */
+.home-slider img {
+    width: 100%;
+    height: 800px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+/* General section styles */
+.services, .contact, .about, .signup, .cart, .login, .profile, .messages, .history, .function-hall, .payment, .dashboard-container {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* Messages section */
+.messages {
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Heading styles */
+h2 {
+    font-size: 32px;
+    color: #4a2c5e;
+    margin-bottom: 20px;
+}
+
+/* Grid layouts */
+.service-grid, .vendor-grid, .team-grid {
+    display: grid;
+    gap: 20px;
+}
+
+/* Vendor grid */
+.vendor-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+/* Service grid */
+.service-grid {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Team grid */
+.team-grid {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Styles for service and team boxes */
+.service-box, .team-member {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+    text-decoration: none;
+    color: #333;
+    text-align: center;
+}
+
+/* Styles for vendor boxes */
+.vendor-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+    text-decoration: none;
+    color: #333;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Hover effect for service and vendor boxes */
+.service-box:hover, .vendor-box:hover {
+    transform: translateY(-3px);
+}
+
+/* Vendor box images */
+.vendor-box img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* Vendor box headings */
+.vendor-box h3 {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+/* Vendor box price and description */
+.vendor-box p {
+    font-size: 14px;
+    color: #666;
+    margin: 3px 0;
+}
+
+/* More Details button */
+.vendor-box .more-details-btn {
+    display: inline-block;
+    background: #6b3e8a;
+    color: #fff;
+    padding: 8px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.vendor-box .more-details-btn:hover {
+    background: #5a3373;
+}
+
+/* Font Awesome icons in service boxes */
+.service-box i {
+    font-size: 40px;
+    color: #4a2c5e;
+    margin-bottom: 10px;
+}
+
+/* Headings in service boxes */
+.service-box h3 {
+    font-size: 18px;
+    margin: 0px 0;
+    padding:0px;
+}
+
+/* About page content */
+.about-content {
+    max-width: 800px;
+    margin: 0 auto 30px;
+    text-align: left;
+}
+
+/* Team member images */
+.team-member img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+/* Team member headings */
+.team-member h4 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+/* Team member role descriptions */
+.team-member p {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Filters section */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+    justify-content: center;
+}
+
+/* Filter inputs, selects, and buttons */
+.filters input, .filters select, .filters button,
+form input, form select, form textarea, form button {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px 0;
+}
+
+/* Textarea for forms */
+form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Form buttons */
+form button {
+    background: #4a2c5e;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+form button:hover {
+    background: #3a224b;
+}
+
+/* Calendar toggle button */
+#show-calendar {
+    background: #6b3e8a;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#show-calendar:hover {
+    background: #5a3373;
+}
+
+/* Vendor details section */
+.vendor-details {
+    text-align: center;
+}
+
+/* Vendor details container for two-column layout */
+.vendor-details-container {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+/* Left column: Vendor slider */
+.vendor-details .vendor-slider {
+    flex: 1;
+    max-width: 500px;
+    margin: 0;
+}
+
+/* Vendor slider images and videos */
+.vendor-details .vendor-slider img,
+.vendor-details .vendor-slider video {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Right column: Vendor info */
+.vendor-info {
+    flex: 1;
+    text-align: left;
+}
+
+/* Vendor info heading */
+.vendor-info h3 {
+    font-size: 24px;
+    color: #4a2c5e;
+    margin-bottom: 15px;
+}
+
+/* Vendor info item (label-value pair) */
+.vendor-info-item {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+/* Label styling */
+.vendor-info-item .label {
+    font-weight: 600;
+    color: #4a2c5e;
+    width: 150px;
+}
+
+/* Value styling */
+.vendor-info-item .value {
+    flex: 1;
+    color: #333;
+}
+
+/* Vendor info actions (Book Now and Add to Cart) */
+.vendor-info-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* Book Now and Add to Cart forms */
+.book-now-form, .add-to-cart-form {
+    flex: 1;
+    min-width: 200px;
+    max-width: 250px;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Date picker container */
+.date-picker-container {
+    margin-bottom: 10px;
+}
+
+.date-picker-container label {
+    display: block;
+    font-size: 14px;
+    color: #4a2c5e;
+    margin-bottom: 5px;
+}
+
+.date-picker-container input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* Selected date display */
+.selected-date {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    text-align: center;
+}
+
+/* Adjust Book Now form inputs */
+.book-now-form input[type="date"] {
+    margin-bottom: 10px;
+}
+
+/* Vendor actions (buttons and forms) */
+.vendor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+    align-items: flex-start;
+}
+
+/* Action forms */
+.action-form {
+    flex: 1;
+    min-width: 250px;
+    max-width: 300px;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    align-self: flex-start;
+}
+
+/* Action rating styling */
+.action-rating {
+    font-size: 14px;
+    color: #4a2c5e;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* Availability section */
+.availability {
+    flex: 1;
+    min-width: 250px;
+    max-width: 100%;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: visible;
+    align-self: flex-start;
+}
+
+/* Calendar styling */
+.calendar {
+    margin-top: 20px;
+    display: none;
+    max-width: 100%;
+    width: 100%;
+    overflow: visible;
+}
+
+.calendar.fc {
+    background: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    width: 100%;
+    max-width: 1000px; /* Increased width */
+    margin: 0 auto;
+    border: 2px solid #4a2c5e; /* Attractive border */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Enhanced shadow */
+}
+
+/* Calendar day cells */
+.calendar .fc-daygrid-day {
+    transition: background 0.2s;
+}
+
+.calendar .fc-daygrid-day:hover {
+    background: #f5f0ff; /* Subtle hover effect */
+}
+
+/* Calendar event styling */
+.calendar .fc-event {
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 14px;
+}
+
+/* Booked calendar slots */
+.calendar .booked {
+    background: #e74c3c !important;
+    color: #fff !important;
+}
+
+/* Available calendar slots */
+.calendar .available {
+    background: #2ecc71 !important;
+    color: #fff !important;
+}
+
+/* Other status styles */
+.calendar .quota-full {
+    background: #6b3e8a !important;
+    color: #fff !important;
+}
+
+.calendar .quota-not-released {
+    background: #7f8c8d !important;
+    color: #fff !important;
+}
+
+.calendar .seva-not-performed {
+    background: #9b59b6 !important;
+    color: #fff !important;
+}
+
+/* Feedback section */
+.feedback-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    text-align: left;
+}
+
+.feedback-section h3 {
+    font-size: 22px;
+    color: #4a2c5e;
+    margin-bottom: 15px;
+}
+
+/* Feedback section under actions */
+.feedback-section.action-feedback {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f9f9f9;
+    box-shadow: none;
+    border: 1px solid #ddd;
+}
+
+.feedback-section.action-feedback h4 {
+    font-size: 18px;
+    color: #4a2c5e;
+    margin-bottom: 10px;
+}
+
+.feedback-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+
+.feedback-item:last-child {
+    border-bottom: none;
+}
+
+.feedback-item p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.feedback-item p strong {
+    color: #4a2c5e;
+}
+
+/* Star rating system */
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 20px;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input:checked ~ label {
+    color: #6b3e8a;
+}
+
+.star-rating:invalid {
+    border: 1px solid #e74c3c;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+/* Full-screen image modal */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    justify-content: center;
+    align-items: center;
+}
+
+.image-modal .modal-content {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 5px;
+}
+
+.image-modal .close-modal {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 40px;
+    cursor: pointer;
+}
+
+/* Signup slider */
+.signup-slider {
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+/* Signup slider images and videos */
+.signup-slider img,
+.signup-slider video {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+/* Cart, booking, and message items */
+.cart-item, .booking, .message {
+    background: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Remove link in cart */
+.cart-item a.remove-link {
+    color: #e74c3c;
+    text-decoration: none;
+}
+
+.cart-item a.remove-link:hover {
+    text-decoration: underline;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #4a2c5e;
+    color: #fff;
+}
+
+/* Payment details section */
+.payment-details {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.payment-details p {
+    margin: 10px 0;
+    text-align: left;
+}
+
+/* Dashboard layout */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background: #4a2c5e;
+    color: #fff;
+    padding: 20px;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    transform: translateX(0);
+}
+
+.sidebar ul {
+    flex-direction: column;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.sidebar ul li a.active {
+    background: #6b3e8a;
+    color: #fff;
+}
+
+.content {
+    margin-left: 250px;
+    padding: 20px;
+    width: calc(100% - 250px);
+}
+
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #4a2c5e;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.messages-container {
+    display: flex;
+    flex: 1;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.user-list {
+    width: 30%;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.user-list .filters {
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    background: #ddd;
+    border: none;
+    padding: 8px 15px;
+    margin-right: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.filter-btn:hover {
+    background: #6b3e8a;
+    color: #fff;
+}
+
+.user-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd;
+}
+
+.user-item:hover, .user-item.active {
+    background: #6b3e8a;
+    color: #fff;
+}
+
+.unread-count {
+    background: #e74c3c;
+    color: #fff;
+    border-radius: 50%;
+    padding: 2px 8px;
+    margin-left: 10px;
+    font-size: 12px;
+}
+
+.chat-window {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+}
+
+#chat-header {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+#chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sender-message, .receiver-message {
+    max-width: 70%;
+    margin: 10px 0;
+    padding: 10px 15px;
+    border-radius: 10px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.sender-message {
+    align-self: flex-end;
+    background: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+    margin-right: 15px;
+}
+
+.receiver-message {
+    align-self: flex-start;
+    background: #4a2c5e;
+    color: #fff;
+    margin-left: 15px;
+}
+
+.sender-message p, .receiver-message p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.sender-message p strong, .receiver-message p strong {
+    font-weight: 600;
+}
+
+.sender-message img, .receiver-message img,
+.sender-message video, .receiver-message video {
+    max-width: 100%;
+    border-radius: 10px;
+    margin-top: 5px;
+}
+
+.sender-message span, .receiver-message span {
+    font-size: 12px;
+    display: block;
+    margin-top: 5px;
+    opacity: 0.7;
+}
+
+.sender-message span {
+    text-align: right;
+    color: #666;
+}
+
+.receiver-message span {
+    text-align: left;
+    color: #e0e0e0;
+}
+
+#reply-form {
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#reply-form textarea {
+    flex: 1;
+    min-height: 50px;
+}
+
+#reply-form input[type="file"] {
+    display: none;
+}
+
+.upload-btn {
+    background: #6b3e8a;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-btn:hover {
+    background: #5a3373;
+}
+
+.contact-form {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.signup-form {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-step {
+    margin-bottom: 20px;
+}
+
+.form-step h3 {
+    font-size: 20px;
+    color: #4a2c5e;
+    margin-bottom: 15px;
+}
+
+.contact-form input,
+.contact-form textarea,
+.signup-form input,
+.signup-form select,
+.signup-form textarea {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.contact-form button,
+.signup-form button {
+    background: #4a2c5e;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+    width: 100%;
+    font-size: 16px;
+}
+
+.contact-form button:hover,
+.signup-form button:hover {
+    background: #3a224b;
+}
+
+footer {
+    background: #4a2c5e;
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+    margin-top: 40px;
+}
+
+.filter-form {
+    margin-bottom: 20px;
+}
+
+.filter-form label {
+    margin-right: 10px;
+}
+
+.filter-form input[type="date"] {
+    padding: 5px;
+    margin-right: 10px;
+}
+
+.filter-form button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.filter-form button:hover {
+    background-color: #0056b3;
+}
+
+.login-hero {
+    position: relative;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    background: url('images/wedding-couple.jpg') no-repeat center center/cover;
+    overflow: hidden;
+}
+
+.login-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+.login-content {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.login-content h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.login-content p {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-form select,
+.login-form input {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    width: 100%;
+}
+
+.login-form button {
+    background-color: #6b3e8a;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-form button:hover {
+    background-color: #5a3373;
+}
+
+.login-form .forgot-password {
+    color: #6b3e8a;
+    text-decoration: none;
+    font-size: 14px;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.login-form .forgot-password:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .login-hero {
+        height: 400px;
+    }
+    .login-content h1 {
+        font-size: 28px;
+    }
+    .login-content p {
+        font-size: 16px;
+    }
+    .login-form {
+        padding: 15px;
+    }
+    .hero-slider {
+        height: 75vh; /* Maintain 75% height on mobile */
+    }
+    .slider-item {
+        height: 75vh;
+    }
+    .slider-content h1 {
+        font-size: 28px;
+    }
+    .slider-content p {
+        font-size: 16px;
+    }
+    .search-bar {
+        flex-direction: column;
+        padding: 15px;
+    }
+    .home-slider img {
+        height: 200px;
+    }
+    .vendor-grid {
+        grid-template-columns: 1fr;
+    }
+    .service-grid,
+    .team-grid {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-container {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        position: fixed;
+        height: 100%;
+        transform: translateX(-100%);
+        z-index: 999;
+    }
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    .content {
+        margin-left: 0;
+        width: 100%;
+    }
+    .sidebar-toggle {
+        display: block;
+    }
+    .messages-container {
+        flex-direction: column;
+        height: auto;
+    }
+    .user-list, .chat-window {
+        width: 100%;
+    }
+    .user-list {
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+    }
+    .contact-form,
+    .signup-form {
+        padding: 15px;
+    }
+    .vendor-details-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .vendor-details .vendor-slider {
+        max-width: 100%;
+    }
+    .vendor-info {
+        text-align: center;
+    }
+    .vendor-info-item {
+        flex-direction: column;
+        align-items: center;
+    }
+    .vendor-info-item .label {
+        width: auto;
+        margin-bottom: 5px;
+    }
+    .vendor-info-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .book-now-form, .add-to-cart-form {
+        min-width: 100%;
+        max-width: 100%;
+        margin-bottom: 15px;
+    }
+    .vendor-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .action-form, .availability {
+        min-width: 100%;
+        max-width: 100%;
+        margin-bottom: 15px;
+    }
+    .calendar.fc {
+        max-width: 100%; /* Full width on mobile */
+    }
+    .feedback-section.action-feedback {
+        padding: 10px;
+    }
+    .feedback-section.action-feedback h4 {
+        font-size: 16px;
+    }
+}
