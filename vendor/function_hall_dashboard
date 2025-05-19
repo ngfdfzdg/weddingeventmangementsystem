@@ -1,0 +1,471 @@
+<?php
+session_start();
+include '../includes/db_connect.php';
+
+if (!isset($_SESSION['vendor_id'])) {
+    header("Location: ../login.php");
+    exit;
+}
+
+$vendor_id = $_SESSION['vendor_id'];
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['update_availability'])) {
+        $date = $_POST['date'];
+        $status = $_POST['status'];
+
+        // NEW: Check if the date is already booked
+        $stmt = $conn->prepare("SELECT status FROM availability WHERE vendor_id = ? AND date = ?");
+        $stmt->bind_param("is", $vendor_id, $date);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0 && $result->fetch_assoc()['status'] == 'booked' && $status == 'booked') {
+            echo "<script>alert('This date is already booked!');</script>";
+        } else {
+            $stmt = $conn->prepare("INSERT INTO availability (vendor_id, date, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = ?");
+            $stmt->bind_param("isss", $vendor_id, $date, $status, $status);
+            $stmt->execute();
+            echo "<script>alert('Availability updated!');</script>";
+        }
+        $stmt->close();
+    } elseif (isset($_POST['update_profile'])) {
+        $business_name = $_POST['business_name'];
+        $category = $_POST['category'];
+        $price_per_day = $_POST['price_per_day'];
+        $price_per_marriage = $_POST['price_per_marriage'];
+        $capacity = $_POST['capacity'];
+        $parking = $_POST['parking'];
+        $acres = $_POST['acres'];
+        $advance_payment = $_POST['advance_payment'];
+        $description = $_POST['description'];
+        $email = $_POST['email'];
+        $phone = $_POST['phone'];
+
+        $images = [];
+        for ($i = 1; $i <= 5; $i++) {
+            if (isset($_FILES["image$i"]) && $_FILES["image$i"]['name']) {
+                $target = "../images/" . basename($_FILES["image$i"]['name']);
+                if (move_uploaded_file($_FILES["image$i"]['tmp_name'], $target)) {
+                    $images[] = basename($_FILES["image$i"]['name']);
+                }
+            }
+        }
+        if (empty($images)) {
+            $stmt = $conn->prepare("SELECT images FROM vendors WHERE id = ?");
+            $stmt->bind_param("i", $vendor_id);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            $images = json_decode($result['images'], true) ?? [];
+            $stmt->close();
+        }
+        $images_json = json_encode($images);
+
+        $stmt = $conn->prepare("UPDATE vendors SET business_name = ?, category = ?, price_per_day = ?, price_per_marriage = ?, capacity = ?, parking = ?, acres = ?, advance_payment = ?, description = ?, email = ?, phone = ?, images = ? WHERE id = ?");
+        $stmt->bind_param("ssddisddssssi", $business_name, $category, $price_per_day, $price_per_marriage, $capacity, $parking, $acres, $advance_payment, $description, $email, $phone, $images_json, $vendor_id);
+        $stmt->execute();
+        $stmt->close();
+        echo "<script>alert('Profile updated!');</script>";
+    } elseif (isset($_POST['update_payment'])) {
+        $bank_name = $_POST['bank_name'];
+        $account_holder = $_POST['account_holder'];
+        $account_number = $_POST['account_number'];
+        $ifsc_code = $_POST['ifsc_code'];
+
+        $stmt = $conn->prepare("UPDATE vendors SET bank_name = ?, account_holder = ?, account_number = ?, ifsc_code = ? WHERE id = ?");
+        $stmt->bind_param("sssss", $bank_name, $account_holder, $account_number, $ifsc_code, $vendor_id);
+        $stmt->execute();
+        $stmt->close();
+        echo "<script>alert('Payment details updated!');</script>";
+    } elseif (isset($_POST['contact'])) {
+        $name = $_POST['name'];
+        $email = $_POST['email'];
+        $phone = $_POST['phone'];
+        $message = $_POST['message'];
+        $stmt = $conn->prepare("INSERT INTO contact_messages (full_name, email, phone, message) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $name, $email, $phone, $message);
+        $stmt->execute();
+        $stmt->close();
+        echo "<script>alert('Message sent to admin!');</script>";
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Hall Dashboard</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="header-left">
+            <div class="logo">Wedding Management</div>
+        </div>
+        <nav class="header-nav">
+            <ul>
+                <li><a href="#dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#manage-bookings"><i class="fas fa-calendar"></i> Manage Bookings</a></li>
+                <li><a href="#view-bookings"><i class="fas fa-list"></i> View Bookings</a></li>
+                <li><a href="#edit-profile"><i class="fas fa-user"></i> Edit Profile</a></li>
+                <li><a href="#messages"><i class="fas fa-envelope"></i> Messages</a></li>
+                <li><a href="#payment-details"><i class="fas fa-money-bill"></i> Payment Details</a></li>
+                <li><a href="#payment-history"><i class="fas fa-history"></i> Payment History</a></li>
+                <li><a href="#contact"><i class="fas fa-phone"></i> Contact</a></li>
+                <li><a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="dashboard-container">
+        <div class="content">
+            <section id="dashboard" class="section">
+                <h2>Dashboard</h2>
+                <?php
+                $stmt = $conn->prepare("SELECT COUNT(*) as total FROM bookings WHERE vendor_id = ?");
+                $stmt->bind_param("i", $vendor_id);
+                $stmt->execute();
+                $total = $stmt->get_result()->fetch_assoc()['total'];
+                $stmt->close();
+                echo "<p>Total Bookings: $total</p>";
+                ?>
+            </section>
+
+            <section id="manage-bookings" class="section" style="display: none;">
+                <h2>Manage Bookings</h2>
+                <form method="POST">
+                    <input type="date" name="date" required>
+                    <select name="status" required>
+                        
+                        <option value="booked">Booked</option>
+                    </select>
+                    <button type="submit" name="update_availability">Update</button>
+                </form>
+            </section>
+
+            <section id="view-bookings" class="section" style="display: none;">
+                <h2>View Bookings</h2>
+                <!-- NEW: Added date range filter -->
+                <form method="GET" class="filter-form">
+                    <label>From:</label>
+                    <input type="date" name="start_date">
+                    <label>To:</label>
+                    <input type="date" name="end_date">
+                    <button type="submit">Filter</button>
+                </form>
+                <table>
+                    <tr>
+                        <th>S.No</th>
+                        <th>User Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Date</th>
+                        <th>Payment Status</th>
+                    </tr>
+                    <?php
+                    $query = "SELECT b.*, u.full_name, u.email, u.phone FROM bookings b JOIN users u ON b.user_id = u.id WHERE b.vendor_id = ?";
+                    $params = [$vendor_id];
+                    $types = "i";
+
+                    if (isset($_GET['start_date']) && isset($_GET['end_date']) && !empty($_GET['start_date']) && !empty($_GET['end_date'])) {
+                        $start_date = $_GET['start_date'];
+                        $end_date = $_GET['end_date'];
+                        $query .= " AND b.booking_date BETWEEN ? AND ?";
+                        $params[] = $start_date;
+                        $params[] = $end_date;
+                        $types .= "ss";
+                    }
+
+                    $stmt = $conn->prepare($query);
+                    $stmt->bind_param($types, ...$params);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $i = 1;
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<tr>";
+                        echo "<td>$i</td>";
+                        echo "<td>" . htmlspecialchars($row['full_name']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['email']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['phone']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['booking_date']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['payment_status']) . "</td>";
+                        echo "</tr>";
+                        $i++;
+                    }
+                    $stmt->close();
+                    ?>
+                </table>
+            </section>
+
+            <section id="edit-profile" class="section" style="display: none;">
+                <h2>Edit Profile</h2>
+                <?php
+                $stmt = $conn->prepare("SELECT * FROM vendors WHERE id = ?");
+                $stmt->bind_param("i", $vendor_id);
+                $stmt->execute();
+                $vendor = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                ?>
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="text" name="business_name" value="<?php echo htmlspecialchars($vendor['business_name']); ?>" required>
+                    <select name="category" required>
+                        <option value="function_hall" <?php if ($vendor['category'] == 'function_hall') echo 'selected'; ?>>Function Hall</option>
+                    </select>
+                    <input type="number" name="price_per_day" value="<?php echo htmlspecialchars($vendor['price_per_day']); ?>" step="0.01" required>
+                    <input type="number" name="price_per_marriage" value="<?php echo htmlspecialchars($vendor['price_per_marriage']); ?>" step="0.01" required>
+                    <input type="number" name="capacity" value="<?php echo htmlspecialchars($vendor['capacity']); ?>" required>
+                    <select name="parking" required>
+                        <option value="yes" <?php if ($vendor['parking'] == 'yes') echo 'selected'; ?>>Yes</option>
+                        <option value="no" <?php if ($vendor['parking'] == 'no') echo 'selected'; ?>>No</option>
+                    </select>
+                    <input type="number" name="acres" value="<?php echo htmlspecialchars($vendor['acres']); ?>" step="0.01" required>
+                    <input type="number" name="advance_payment" value="<?php echo htmlspecialchars($vendor['advance_payment']); ?>" step="0.01" required>
+                    <textarea name="description" required><?php echo htmlspecialchars($vendor['description']); ?></textarea>
+                    <input type="email" name="email" value="<?php echo htmlspecialchars($vendor['email']); ?>" required>
+                    <input type="text" name="phone" value="<?php echo htmlspecialchars($vendor['phone']); ?>" required>
+                    <input type="file" name="image1" accept="image/*">
+                    <input type="file" name="image2" accept="image/*">
+                    <input type="file" name="image3" accept="image/*">
+                    <input type="file" name="image4" accept="image/*">
+                    <input type="file" name="image5" accept="image/*">
+                    <button type="submit" name="update_profile">Update</button>
+                </form>
+            </section>
+
+            <section id="messages" class="section" style="display: none;">
+                <h2>Messages</h2>
+                <div class="messages-container">
+                    <div class="user-list">
+                        <div class="filters">
+                            <button class="filter-btn" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="read">Read</button>
+                            <button class="filter-btn" data-filter="unread">Unread</button>
+                        </div>
+                        <ul id="user-list">
+                            <?php
+                            $stmt = $conn->prepare("SELECT u.id, u.full_name, COUNT(m.id) as unread_count FROM users u LEFT JOIN messages m ON m.sender_id = u.id AND m.receiver_id = ? AND m.is_read = 0 WHERE EXISTS (SELECT 1 FROM messages WHERE (sender_id = u.id AND receiver_id = ?) OR (sender_id = ? AND receiver_id = u.id)) GROUP BY u.id");
+                            $stmt->bind_param("iii", $vendor_id, $vendor_id, $vendor_id);
+                            $stmt->execute();
+                            $result = $stmt->get_result();
+                            while ($row = $result->fetch_assoc()) {
+                                echo "<li data-user-id='{$row['id']}' class='user-item'>";
+                                echo htmlspecialchars($row['full_name']);
+                                if ($row['unread_count'] > 0) {
+                                    echo "<span class='unread-count'>{$row['unread_count']}</span>";
+                                }
+                                echo "</li>";
+                            }
+                            $stmt->close();
+                            ?>
+                        </ul>
+                    </div>
+                    <div class="chat-window">
+                        <div id="chat-header"></div>
+                        <div id="chat-messages"></div>
+                        <form id="reply-form" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="user_id" id="chat-user-id">
+                            <textarea name="message" placeholder="Type a message"></textarea>
+                            <input type="file" name="media" accept="image/jpeg,image/png,video/mp4" id="media-upload">
+                            <label for="media-upload" class="upload-btn"><i class="fas fa-paperclip"></i></label>
+                            <button type="submit">Send</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section id="payment-details" class="section" style="display: none;">
+                <h2>Payment Details</h2>
+                <?php
+                $stmt = $conn->prepare("SELECT bank_name, account_holder, account_number, ifsc_code FROM vendors WHERE id = ?");
+                $stmt->bind_param("i", $vendor_id);
+                $stmt->execute();
+                $payment = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                ?>
+                <div class="payment-details">
+                    <form method="POST">
+                        <input type="text" name="bank_name" value="<?php echo htmlspecialchars($payment['bank_name']); ?>" placeholder="Bank Name" required>
+                        <input type="text" name="account_holder" value="<?php echo htmlspecialchars($payment['account_holder']); ?>" placeholder="Account Holder" required>
+                        <input type="text" name="account_number" value="<?php echo htmlspecialchars($payment['account_number']); ?>" placeholder="Account Number" required>
+                        <input type="text" name="ifsc_code" value="<?php echo htmlspecialchars($payment['ifsc_code']); ?>" placeholder="IFSC Code" required>
+                        <button type="submit" name="update_payment">Update</button>
+                    </form>
+                    <p>Bank Name: <?php echo htmlspecialchars($payment['bank_name']); ?></p>
+                    <p>Account Holder: <?php echo htmlspecialchars($payment['account_holder']); ?></p>
+                    <p>Account Number: <?php echo htmlspecialchars($payment['account_number']); ?></p>
+                    <p>IFSC Code: <?php echo htmlspecialchars($payment['ifsc_code']); ?></p>
+                </div>
+            </section>
+
+            <section id="payment-history" class="section" style="display: none;">
+                <h2>Payment History</h2>
+                <table>
+                    <tr>
+                        <th>S.No</th>
+                        <th>User Name</th>
+                        <th>Phone</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                    <?php
+                    $stmt = $conn->prepare("SELECT b.*, u.full_name, u.phone FROM bookings b JOIN users u ON b.user_id = u.id WHERE b.vendor_id = ?");
+                    $stmt->bind_param("i", $vendor_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $i = 1;
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<tr>";
+                        echo "<td>$i</td>";
+                        echo "<td>" . htmlspecialchars($row['full_name']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['phone']) . "</td>";
+                        echo "<td>$" . htmlspecialchars($row['advance_payment']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['booking_date']) . "</td>";
+                        echo "</tr>";
+                        $i++;
+                    }
+                    $stmt->close();
+                    ?>
+                </table>
+            </section>
+
+            <section id="contact" class="section" style="display: none;">
+                <h2>Contact</h2>
+                <form method="POST">
+                    <input type="text" name="name" placeholder="Name" required>
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="text" name="phone" placeholder="Phone" required>
+                    <textarea name="message" placeholder="Message" required></textarea>
+                    <button type="submit" name="contact">Send</button>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <?php include '../includes/footer.php'; ?>
+    <script src="../js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sections = document.querySelectorAll('.section');
+        const links = document.querySelectorAll('.header-nav a');
+
+        function showSection(id) {
+            sections.forEach(section => section.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            links.forEach(link => link.classList.remove('active'));
+            document.querySelector(`a[href="#${id}"]`)?.classList.add('active');
+        }
+
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href === '../logout.php') {
+                    // Allow full page redirect for logout
+                    return;
+                }
+                e.preventDefault();
+                const sectionId = href.substring(1);
+                showSection(sectionId);
+            });
+        });
+
+        showSection('dashboard');
+
+        const userItems = document.querySelectorAll('.user-item');
+        const chatHeader = document.getElementById('chat-header');
+        const chatMessages = document.getElementById('chat-messages');
+        const replyForm = document.getElementById('reply-form');
+        const chatUserId = document.getElementById('chat-user-id');
+
+        function loadMessages(userId, userName) {
+            chatHeader.innerHTML = `<h3>${userName}</h3>`;
+            chatUserId.value = userId;
+            $.ajax({
+                url: '../get_messages.php',
+                method: 'GET',
+                data: { user_id: userId, vendor_id: <?php echo $vendor_id; ?> },
+                success: function(data) {
+                    chatMessages.innerHTML = data;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    $.ajax({
+                        url: '../mark_read.php',
+                        method: 'POST',
+                        data: { user_id: userId, vendor_id: <?php echo $vendor_id; ?> },
+                        success: function() {
+                            document.querySelector(`li[data-user-id="${userId}"] .unread-count`)?.remove();
+                        },
+                        error: function(xhr) {
+                            console.error('Error marking messages as read:', xhr.responseText);
+                        }
+                    });
+                },
+                error: function(xhr) {
+                    console.error('Error loading messages:', xhr.responseText);
+                }
+            });
+        }
+
+        userItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.textContent.replace(/\d+$/, '');
+                loadMessages(userId, userName);
+                userItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        replyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            $.ajax({
+                url: '../send_message.php',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function() {
+                    if (chatUserId.value && chatHeader.textContent) {
+                        loadMessages(chatUserId.value, chatHeader.textContent);
+                        replyForm.reset();
+                    } else {
+                        alert('Please select a user to send a message.');
+                    }
+                },
+                error: function(xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        });
+
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filter = this.getAttribute('data-filter');
+                $.ajax({
+                    url: '../filter_users.php',
+                    method: 'GET',
+                    data: { filter: filter, vendor_id: <?php echo $vendor_id; ?> },
+                    success: function(data) {
+                        document.getElementById('user-list').innerHTML = data;
+                        const newUserItems = document.querySelectorAll('.user-item');
+                        newUserItems.forEach(item => {
+                            item.addEventListener('click', function() {
+                                const userId = this.getAttribute('data-user-id');
+                                const userName = this.textContent.replace(/\d+$/, '');
+                                loadMessages(userId, userName);
+                                newUserItems.forEach(i => i.classList.remove('active'));
+                                this.classList.add('active');
+                            });
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error('Error filtering users:', xhr.responseText);
+                    }
+                });
+            });
+        });
+    });
+</script>
+</body>
+</html>
